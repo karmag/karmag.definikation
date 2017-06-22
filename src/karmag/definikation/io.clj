@@ -43,11 +43,19 @@
     (not (common/id? (:id item))) "Key :id must be an #id"
     :else nil))
 
+(defn- validate-change [item]
+  (when (common/type? item :karmag.definikation/change)
+    (cond
+      (not (set? (:for item))) "Key :for must be a set"
+      (not (:change item)) "Key :change is required"
+      :else nil)))
+
 (defn validate
   "Returns a map of {item [error]}."
   [items]
   (let [errors (reduce (fn [errors item]
-                         (if-let [error (validate-id item)]
+                         (if-let [error (or (validate-id item)
+                                            (validate-change item))]
                            (update-in errors [item] conj error)
                            errors))
                        nil

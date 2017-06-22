@@ -31,3 +31,21 @@
       (is (= 1 (count (get errors item))))
       (is (= "Id overlaps with another item" (first (get errors item))))
       (is (= 1 (->> errors (mapcat val) set count))))))
+
+(deftest read-change-validation-test
+  (testing "missing :for"
+    (let [[spec errors]
+          (read-string "{:id #id [:karmag.definikation/change 1]
+                         :change {}}")
+          item (first (keys errors))]
+      (is (= 1 (count errors)))
+      (is (= 1 (count (get errors item))))
+      (is (= "Key :for must be a set" (first (get errors item))))))
+  (testing "missing :change"
+    (let [[spec errors]
+          (read-string "{:id #id [:karmag.definikation/change 1]
+                         :for #{}}")
+          item (first (keys errors))]
+      (is (= 1 (count errors)))
+      (is (= 1 (count (get errors item))))
+      (is (= "Key :change is required" (first (get errors item)))))))
