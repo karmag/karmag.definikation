@@ -28,3 +28,16 @@
                         (:for change))))
             spec
             changes)))
+
+(defn get-at
+  "Traverses the item in the same manner as get-in but when an id is
+  encountered it's replaced by the corresponding item."
+  [spec item-or-id path]
+  (reduce (fn [data key]
+            (if (common/id? data)
+              (get (get spec data) key)
+              (get data key)))
+          (get spec (if (common/id? item-or-id)
+                      item-or-id
+                      (:id item-or-id)))
+          path))

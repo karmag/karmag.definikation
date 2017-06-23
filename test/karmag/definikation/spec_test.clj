@@ -7,7 +7,7 @@
 (def local-spec
   (let [[spec errors]
         (core/read-string
-         "{:id #id [:prop :x]}
+         "{:id #id [:prop :x], :some :value}
           {:id #id [:pointer 1], :point #id [:prop :x]}
 
           {:id #id [:target :alpha]
@@ -44,3 +44,13 @@
                                                  :more :stuff})]
         (is (= (get spec id)
                {:id id, :data {:key :new-value}}))))))
+
+(deftest get-at-test
+  (let [pointer-id (make-id :pointer 1)]
+    (are [path result]
+        (= result (spec/get-at local-spec pointer-id path))
+      []             {:id pointer-id, :point (make-id :prop :x)}
+      [:id]          pointer-id
+      [:id :id :id]  pointer-id
+      [:point :some] :value
+      [:point :id]   (make-id :prop :x))))
