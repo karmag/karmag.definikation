@@ -10,42 +10,6 @@
                   {id {:id id}})))
     (is (empty? errors))))
 
-(deftest read-string-validation-test
-  (testing "missing id"
-    (let [[spec errors] (read-string "{:not-id :a}")
-          item {:not-id :a}]
-      (is (= 1 (count errors)))
-      (is (= 1 (count (get errors item))))
-      (is (= "Key :id is required" (first (get errors item))))))
-  (testing "incorrect id"
-    (let [[spec errors] (read-string "{:id :failure}")
-          item {:id :failure}]
-      (is (= 1 (count errors)))
-      (is (= 1 (count (get errors item))))
-      (is (= "Key :id must be an #id" (first (get errors item))))))
-  (testing "overlapping ids"
-    (let [[spec errors] (read-string "{:id #id [:type :id] :key 1} {:id #id [:type :id]}")
-          item (let [id (common/make-id :type :id)]
-                 {:id id})]
-      (is (= 2 (count errors)))
-      (is (= 1 (count (get errors item))))
-      (is (= "Id overlaps with another item" (first (get errors item))))
-      (is (= 1 (->> errors (mapcat val) set count))))))
-
-(deftest read-change-validation-test
-  (testing "missing :for"
-    (let [[spec errors]
-          (read-string "{:id #id [:karmag.definikation/change 1]
-                         :change {}}")
-          item (first (keys errors))]
-      (is (= 1 (count errors)))
-      (is (= 1 (count (get errors item))))
-      (is (= "Key :for must be a set" (first (get errors item))))))
-  (testing "missing :change"
-    (let [[spec errors]
-          (read-string "{:id #id [:karmag.definikation/change 1]
-                         :for #{}}")
-          item (first (keys errors))]
-      (is (= 1 (count errors)))
-      (is (= 1 (count (get errors item))))
-      (is (= "Key :change is required" (first (get errors item)))))))
+(deftest multiple-of-same-id-test
+  (is (thrown? clojure.lang.ExceptionInfo
+               (read-string "{:id #id [:a :b]} {:id #id [:a :b]}"))))

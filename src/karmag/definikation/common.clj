@@ -2,7 +2,9 @@
   (:require [clojure.set]
             [clojure.walk :refer [walk]]))
 
-(defrecord Id [type id])
+(defrecord Id [type id]
+  Object
+  (toString [this] (str [type id])))
 
 (defn make-id [type id]
   (Id. type id))

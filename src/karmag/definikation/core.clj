@@ -1,6 +1,7 @@
 (ns karmag.definikation.core
   (:refer-clojure :exclude [read read-string])
-  (:require [karmag.definikation.io :as io])
+  (:require [karmag.definikation.io :as io]
+            [karmag.definikation.validation :as validation])
   (:import java.io.StringReader))
 
 (def default-read-config io/default-config)
@@ -14,9 +15,11 @@
   ([source]
    (read default-read-config source))
   ([config source]
-   (let [items (io/read config source)
-         errors (io/validate items)]
-     [(io/collect items) errors])))
+   (let [spec (io/collect (if (coll? source)
+                            (mapcat #(io/read config %) source)
+                            (io/read config source)))
+         errors (validation/validate-all spec)]
+     [spec errors])))
 
 (defn read-string
   "Like 'read' but expects sources to be strings."
