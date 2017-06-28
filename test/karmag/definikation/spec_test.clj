@@ -15,7 +15,14 @@
           {:id #id [:karmag.definikation/change 1]
            :context {:ctx :engage, :part true}
            :for #{#id [:target :alpha]}
-           :change {:data {:key :new-value}}}")]
+           :change {:data {:key :new-value}}}
+
+          {:id #id [:expand 1], :to #id [:expand 2]}
+          {:id #id [:expand 2], :to #id [:expand 3]}
+          {:id #id [:expand 3], :to :end}
+
+          {:id #id [:recursive 1], :to #id [:recursive 2]}
+          {:id #id [:recursive 2], :to #id [:recursive 1]}")]
     (assert (empty? errors)
             (str "Errors: " errors))
     spec))
@@ -54,3 +61,18 @@
       [:id :id :id]  pointer-id
       [:point :some] :value
       [:point :id]   (make-id :prop :x))))
+
+(deftest expand-item-test
+  (testing "regular expansion"
+    (let [id (make-id :expand 1)
+          item (get local-spec id)]
+      (doseq [x [id item]]
+        (is (= (spec/expand-item local-spec x)
+               {:id (make-id :expand 1)
+                :to {:id (make-id :expand 2)
+                     :to {:id (make-id :expand 3)
+                          :to :end}}})))))
+  (testing "recursive items"
+    (is (thrown? StackOverflowError
+                 (spec/expand-item local-spec
+                                   (make-id :recursive 1))))))

@@ -1,5 +1,6 @@
 (ns karmag.definikation.spec
-  (:require [karmag.definikation.common :as common]))
+  (:require [clojure.walk :refer [postwalk]]
+            [karmag.definikation.common :as common]))
 
 (defn find-referencing
   "Returns a sequence of items that reference the given item or
@@ -41,3 +42,20 @@
                       item-or-id
                       (:id item-or-id)))
           path))
+
+(defn expand-item
+  "Expand any ids contained in the given item. Recursively apply the
+  expansion to any ids expanded. The id of any item is not
+  affected. If there are recursive structures the expansion will
+  result in a stack overflow."
+  [spec item-or-id]
+  (let [item (if (common/id? item-or-id)
+               (get spec item-or-id)
+               item-or-id)
+        id (:id item)]
+    (assoc (postwalk (fn [obj]
+                       (if-let [replacement (get spec obj)]
+                         (expand-item spec replacement)
+                         obj))
+                     (dissoc item :id))
+           :id id)))
